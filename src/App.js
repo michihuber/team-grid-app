@@ -15,33 +15,25 @@ function App() {
   const [bracket, setBracket] = useState(initialBracket);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
+  const [editMode, setEditMode] = useState(false);
   const emojiPickerRef = useRef(null);
-  const longPressTimerRef = useRef(null);
 
   const handleTeamClick = (roundIndex, matchIndex) => {
-    if (roundIndex === bracket.length - 1) return; // Final round reached
-
-    const newBracket = [...bracket];
-    const winner = bracket[roundIndex][matchIndex];
-    const nextRoundIndex = roundIndex + 1;
-    const nextMatchIndex = Math.floor(matchIndex / 2);
-
-    newBracket[nextRoundIndex][nextMatchIndex] = winner;
-    setBracket(newBracket);
-  };
-
-  const handleLongPressStart = useCallback((roundIndex, matchIndex) => {
-    longPressTimerRef.current = setTimeout(() => {
+    if (editMode) {
       setCurrentTeam({ roundIndex, matchIndex });
       setShowEmojiPicker(true);
-    }, 500); // 500ms long-press duration
-  }, []);
+    } else {
+      if (roundIndex === bracket.length - 1) return; // Final round reached
 
-  const handleLongPressEnd = useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
+      const newBracket = [...bracket];
+      const winner = bracket[roundIndex][matchIndex];
+      const nextRoundIndex = roundIndex + 1;
+      const nextMatchIndex = Math.floor(matchIndex / 2);
+
+      newBracket[nextRoundIndex][nextMatchIndex] = winner;
+      setBracket(newBracket);
     }
-  }, []);
+  };
 
   const handleEmojiClick = (emojiObject) => {
     const { roundIndex, matchIndex } = currentTeam;
@@ -54,23 +46,33 @@ function App() {
     setShowEmojiPicker(false);
   };
 
-  const handleClickOutside = (event) => {
+  const handleClickOutside = useCallback((event) => {
     if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
       setShowEmojiPicker(false);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
 
   return (
     <div className="App">
       <h1>16-Team Single Elimination Tournament</h1>
-      <p>Tip: Long-press on a team name to add an emoji.</p>
+      <div className="edit-toggle">
+        <label>
+          <input
+            type="checkbox"
+            checked={editMode}
+            onChange={() => setEditMode(!editMode)}
+          />
+          Edit Mode
+        </label>
+      </div>
+      <p>Tip: {editMode ? "Click" : "Right-click"} on a team name to add an emoji.</p>
       <div className="bracket">
         {bracket.map((round, roundIndex) => (
           <div key={roundIndex} className="round">
@@ -79,11 +81,10 @@ function App() {
                 key={matchIndex}
                 className="team"
                 onClick={() => handleTeamClick(roundIndex, matchIndex)}
-                onTouchStart={() => handleLongPressStart(roundIndex, matchIndex)}
-                onTouchEnd={handleLongPressEnd}
-                onMouseDown={() => handleLongPressStart(roundIndex, matchIndex)}
-                onMouseUp={handleLongPressEnd}
-                onMouseLeave={handleLongPressEnd}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (!editMode) handleTeamClick(roundIndex, matchIndex);
+                }}
               >
                 {team || 'TBD'}
               </div>
