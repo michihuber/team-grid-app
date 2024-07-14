@@ -18,6 +18,13 @@ function App() {
   const [editMode, setEditMode] = useState(false);
   const emojiPickerRef = useRef(null);
 
+  const customEmojiCategories = [
+    {
+      name: 'Flags',
+      category: 'flags',
+    },
+  ];
+
   const handleTeamClick = (roundIndex, matchIndex) => {
     if (editMode) {
       setCurrentTeam({ roundIndex, matchIndex });
@@ -94,7 +101,11 @@ function App() {
       </div>
       {showEmojiPicker && (
         <div ref={emojiPickerRef} className="emoji-picker-container">
-          <EmojiPicker onEmojiClick={handleEmojiClick} />
+          <EmojiPicker
+            onEmojiClick={handleEmojiClick}
+            categories={customEmojiCategories}
+            searchPlaceholder="Search for a country flag..."
+          />
         </div>
       )}
     </div>
