@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 import './App.css';
 
@@ -12,21 +12,28 @@ const initialBracket = [
 ];
 
 function App() {
-  const [bracket, setBracket] = useState(initialBracket);
+  const [bracket, setBracket] = useState(() => {
+    const savedBracket = localStorage.getItem('tournament-bracket');
+    return savedBracket ? JSON.parse(savedBracket) : initialBracket;
+  });
+
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
-  const [mode, setMode] = useState('play'); // 'play' or 'edit'
+  const [mode, setMode] = useState(() => {
+    return localStorage.getItem('tournament-mode') || 'play';
+  });
   const emojiPickerRef = useRef(null);
 
-  const customEmojiCategories = [
-    {
-      name: 'Flags',
-      category: 'flags',
-    },
-  ];
+  useEffect(() => {
+    localStorage.setItem('tournament-bracket', JSON.stringify(bracket));
+  }, [bracket]);
+
+  useEffect(() => {
+    localStorage.setItem('tournament-mode', mode);
+  }, [mode]);
 
   const handleTeamClick = (roundIndex, matchIndex) => {
-    if (mode == 'edit') {
+    if (mode === 'edit') {
       setCurrentTeam({ roundIndex, matchIndex });
       setShowEmojiPicker(true);
     } else {
@@ -45,9 +52,13 @@ function App() {
   const handleEmojiClick = (emojiObject) => {
     const { roundIndex, matchIndex } = currentTeam;
     const newBracket = bracket.map((round, rIndex) => 
-      round.map((team, mIndex) => 
-        (rIndex === roundIndex && mIndex === matchIndex) ? emojiObject.emoji : team
-      )
+      round.map((team, mIndex) => {
+        if (rIndex === roundIndex && mIndex === matchIndex) {
+          const currentName = team.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim();
+          return `${emojiObject.emoji} ${currentName}`;
+        }
+        return team;
+      })
     );
     setBracket(newBracket);
     setShowEmojiPicker(false);
