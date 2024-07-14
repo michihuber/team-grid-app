@@ -105,6 +105,8 @@ function App() {
             onEmojiClick={handleEmojiClick}
             categories={customEmojiCategories}
             searchPlaceholder="Search for a country flag..."
+            autoFocusSearch=false
+            previewConfig={{ showPreview: false }}
           />
         </div>
       )}
