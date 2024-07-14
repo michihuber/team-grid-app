@@ -14,10 +14,9 @@ const initialBracket = [
 function App() {
   const [bracket, setBracket] = useState(initialBracket);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
   const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
-
   const emojiPickerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
 
   const handleTeamClick = (roundIndex, matchIndex) => {
     if (roundIndex === bracket.length - 1) return; // Final round reached
@@ -31,11 +30,17 @@ function App() {
     setBracket(newBracket);
   };
 
-  const handleContextMenu = useCallback((event, roundIndex, matchIndex) => {
-    event.preventDefault();
-    setCurrentTeam({ roundIndex, matchIndex });
-    setEmojiPickerPosition({ x: event.clientX, y: event.clientY });
-    setShowEmojiPicker(true);
+  const handleLongPressStart = useCallback((roundIndex, matchIndex) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setCurrentTeam({ roundIndex, matchIndex });
+      setShowEmojiPicker(true);
+    }, 500); // 500ms long-press duration
+  }, []);
+
+  const handleLongPressEnd = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
   }, []);
 
   const handleEmojiClick = (emojiObject) => {
@@ -65,7 +70,7 @@ function App() {
   return (
     <div className="App">
       <h1>16-Team Single Elimination Tournament</h1>
-      <p>Tip: Right-click on a team name to add an emoji.</p>
+      <p>Tip: Long-press on a team name to add an emoji.</p>
       <div className="bracket">
         {bracket.map((round, roundIndex) => (
           <div key={roundIndex} className="round">
@@ -74,7 +79,11 @@ function App() {
                 key={matchIndex}
                 className="team"
                 onClick={() => handleTeamClick(roundIndex, matchIndex)}
-                onContextMenu={(e) => handleContextMenu(e, roundIndex, matchIndex)}
+                onTouchStart={() => handleLongPressStart(roundIndex, matchIndex)}
+                onTouchEnd={handleLongPressEnd}
+                onMouseDown={() => handleLongPressStart(roundIndex, matchIndex)}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressEnd}
               >
                 {team || 'TBD'}
               </div>
@@ -83,15 +92,7 @@ function App() {
         ))}
       </div>
       {showEmojiPicker && (
-        <div 
-          ref={emojiPickerRef}
-          style={{
-            position: 'absolute',
-            left: `${emojiPickerPosition.x}px`,
-            top: `${emojiPickerPosition.y}px`,
-            zIndex: 1000
-          }}
-        >
+        <div ref={emojiPickerRef} className="emoji-picker-container">
           <EmojiPicker onEmojiClick={handleEmojiClick} />
         </div>
       )}
