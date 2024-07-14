@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
+import EmojiPicker from 'emoji-picker-react';
 import './App.css';
 
 const initialBracket = [
@@ -12,6 +13,11 @@ const initialBracket = [
 
 function App() {
   const [bracket, setBracket] = useState(initialBracket);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiPickerPosition, setEmojiPickerPosition] = useState({ x: 0, y: 0 });
+  const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
+
+  const emojiPickerRef = useRef(null);
 
   const handleTeamClick = (roundIndex, matchIndex) => {
     if (roundIndex === bracket.length - 1) return; // Final round reached
@@ -27,20 +33,39 @@ function App() {
 
   const handleContextMenu = useCallback((event, roundIndex, matchIndex) => {
     event.preventDefault();
-    const newName = prompt('Enter new team name:');
-    if (newName !== null) {
-      const newBracket = bracket.map((round, rIndex) => 
-        round.map((team, mIndex) => 
-          (rIndex === roundIndex && mIndex === matchIndex) ? newName : team
-        )
-      );
-      setBracket(newBracket);
+    setCurrentTeam({ roundIndex, matchIndex });
+    setEmojiPickerPosition({ x: event.clientX, y: event.clientY });
+    setShowEmojiPicker(true);
+  }, []);
+
+  const handleEmojiClick = (emojiObject) => {
+    const { roundIndex, matchIndex } = currentTeam;
+    const newBracket = bracket.map((round, rIndex) => 
+      round.map((team, mIndex) => 
+        (rIndex === roundIndex && mIndex === matchIndex) ? emojiObject.emoji : team
+      )
+    );
+    setBracket(newBracket);
+    setShowEmojiPicker(false);
+  };
+
+  const handleClickOutside = (event) => {
+    if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+      setShowEmojiPicker(false);
     }
-  }, [bracket]);
+  };
+
+  React.useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="App">
       <h1>16-Team Single Elimination Tournament</h1>
+      <p>Tip: Right-click on a team name to add an emoji.</p>
       <div className="bracket">
         {bracket.map((round, roundIndex) => (
           <div key={roundIndex} className="round">
@@ -57,6 +82,19 @@ function App() {
           </div>
         ))}
       </div>
+      {showEmojiPicker && (
+        <div 
+          ref={emojiPickerRef}
+          style={{
+            position: 'absolute',
+            left: `${emojiPickerPosition.x}px`,
+            top: `${emojiPickerPosition.y}px`,
+            zIndex: 1000
+          }}
+        >
+          <EmojiPicker onEmojiClick={handleEmojiClick} />
+        </div>
+      )}
     </div>
   );
 }
