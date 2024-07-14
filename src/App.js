@@ -15,7 +15,7 @@ function App() {
   const [bracket, setBracket] = useState(initialBracket);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
-  const [editMode, setEditMode] = useState(false);
+  const [mode, setMode] = useState('play'); // 'play' or 'edit'
   const emojiPickerRef = useRef(null);
 
   const customEmojiCategories = [
@@ -26,7 +26,7 @@ function App() {
   ];
 
   const handleTeamClick = (roundIndex, matchIndex) => {
-    if (editMode) {
+    if (mode == 'edit') {
       setCurrentTeam({ roundIndex, matchIndex });
       setShowEmojiPicker(true);
     } else {
@@ -68,18 +68,22 @@ function App() {
 
   return (
     <div className="App">
-      <h1>16-Team Single Elimination Tournament</h1>
-      <div className="edit-toggle">
-        <label>
-          <input
-            type="checkbox"
-            checked={editMode}
-            onChange={() => setEditMode(!editMode)}
-          />
-          Edit Mode
-        </label>
+      <h1>Susos Turnierapp</h1>
+      <div className="mode-toggle">
+        <button 
+          className={mode === 'play' ? 'active' : ''}
+          onClick={() => setMode('play')}
+        >
+    Spielen
+        </button>
+        <button 
+          className={mode === 'edit' ? 'active' : ''}
+          onClick={() => setMode('edit')}
+        >
+    Aussuchen
+        </button>
       </div>
-      <p>Tip: {editMode ? "Click" : "Right-click"} on a team name to add an emoji.</p>
+      <p>Tip: {mode === 'edit' ? "Click" : "Right-click"} on a team to add a country flag.</p>
       <div className="bracket">
         {bracket.map((round, roundIndex) => (
           <div key={roundIndex} className="round">
@@ -90,7 +94,7 @@ function App() {
                 onClick={() => handleTeamClick(roundIndex, matchIndex)}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  if (!editMode) handleTeamClick(roundIndex, matchIndex);
+                  if (mode === 'play') handleTeamClick(roundIndex, matchIndex);
                 }}
               >
                 {team || 'TBD'}
@@ -101,12 +105,17 @@ function App() {
       </div>
       {showEmojiPicker && (
         <div ref={emojiPickerRef} className="emoji-picker-container">
-          <EmojiPicker
+          <EmojiPicker 
             onEmojiClick={handleEmojiClick}
             categories={customEmojiCategories}
             searchPlaceholder="Search for a country flag..."
-            autoFocusSearch={false}
-            previewConfig={{ showPreview: false }}
+            skinTonesDisabled
+            categoryIcons={{}}
+            previewConfig={{
+              showPreview: false
+            }}
+            height={350}
+            width="100%"
           />
         </div>
       )}
