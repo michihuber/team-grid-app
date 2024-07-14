@@ -61,8 +61,7 @@ function App() {
     const newBracket = bracket.map((round, rIndex) => 
       round.map((team, mIndex) => {
         if (rIndex === roundIndex && mIndex === matchIndex) {
-          const currentName = team.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim();
-          return `${emojiObject.emoji} ${currentName}`;
+          return `${emojiObject.emoji}`;
         }
         return team;
       })
