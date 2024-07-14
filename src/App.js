@@ -17,6 +17,13 @@ function App() {
     return savedBracket ? JSON.parse(savedBracket) : initialBracket;
   });
 
+  const customEmojiCategories = [
+    {
+      name: 'Flags',
+      category: 'flags',
+    },
+  ];
+
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [currentTeam, setCurrentTeam] = useState({ roundIndex: 0, matchIndex: 0 });
   const [mode, setMode] = useState(() => {
