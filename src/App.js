@@ -105,17 +105,12 @@ function App() {
       </div>
       {showEmojiPicker && (
         <div ref={emojiPickerRef} className="emoji-picker-container">
-          <EmojiPicker 
+          <EmojiPicker
             onEmojiClick={handleEmojiClick}
             categories={customEmojiCategories}
             searchPlaceholder="Search for a country flag..."
-            skinTonesDisabled
-            categoryIcons={{}}
-            previewConfig={{
-              showPreview: false
-            }}
-            height={350}
-            width="100%"
+            autoFocusSearch={false}
+            previewConfig={{ showPreview: false }}
           />
         </div>
       )}
